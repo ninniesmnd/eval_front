@@ -38,10 +38,11 @@ jobs:
           --comment "Actualizar front-despacho desde ECR" \
           --parameters '{"commands":[
             "set -e",
-            "aws ecr get-login-password --region '${{ secrets.AWS_REGION }}' | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
             "docker pull ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
             "docker stop front-despacho-container || true",
             "docker rm front-despacho-container || true",
-            "docker run -d --name front-despacho-container -p 80:80 ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest"
+            "docker run -d --name front-despacho-container -p 80:80 ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
+            "docker image prune -f"
           ]}' \
           --output text
