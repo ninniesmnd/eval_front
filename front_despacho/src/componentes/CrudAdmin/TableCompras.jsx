@@ -14,6 +14,7 @@ export const TableCompras = () => {
   }
     }).then((response) => {
       console.log(response.data);
+      console.log("ESTO LLEGA DEL BACKEND:", res.data);
       setVentas(response.data);
     });
   };
