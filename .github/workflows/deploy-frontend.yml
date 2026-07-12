@@ -1,0 +1,48 @@
+name: CI/CD - Frontend
+
+on:
+  push:
+    branches: [ "deploy" ] # se ejecuta al hacer push a la rama deploy
+    
+jobs:
+  build-push-deploy-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v3
+
+    - name: Configurar credenciales AWS
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login en Amazon ECR (runner)
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build imagen Frontend y push a ECR
+      run: |
+        # Compila el Dockerfile de React que está en la raíz
+        docker build -t front-despacho .
+        docker tag front-despacho:latest ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
+        docker push ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest
+
+    - name: Desplegar Frontend vía SSM
+      run: |
+        aws ssm send-command \
+          --instance-ids ${{ secrets.EC2_FRONTEND_INSTANCE_ID }} \
+          --document-name "AWS-RunShellScript" \
+          --comment "Actualizar front-despacho desde ECR" \
+          --parameters '{"commands":[
+            "set -e",
+            "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
+            "docker pull ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
+            "docker stop front-despacho-container || true",
+            "docker rm front-despacho-container || true",
+            "docker run -d --name front-despacho-container -p 80:80 ${{ secrets.ECR_REPO_URL_FRONTEND }}:latest",
+            "docker image prune -f"
+          ]}' \
+          --output text

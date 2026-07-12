@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-despacho
+  namespace: tienda
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend-despacho
+  template:
+    metadata:
+      labels:
+        app: frontend-despacho
+    spec:
+      containers:
+        - name: frontend
+          image: 853461024761.dkr.ecr.us-east-1.amazonaws.com/frontend-despacho:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10

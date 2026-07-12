@@ -7,7 +7,7 @@ export const TableCompras = () => {
   const [ventas, setVentas] = useState([]);
 
   const compras = async () => {
-    await axios.get("http://192.168.30/api/v1/ventas", {
+    await axios.get("/api/v1/ventas", {
       headers:{
         'Content-Type': 'application/json',
         'Accept': 'application/json'
@@ -49,7 +49,7 @@ export const TableCompras = () => {
               </thead>
               <tbody>
                 {ventas
-                  .filter((venta) => !venta.despachoGenerado)
+                  //.filter((venta) => !venta.despachoGenerado)
                   .map((venta) => (
                     <tr key={venta.idVenta}>
                       <td className="pr-10 py-10 items-center">
